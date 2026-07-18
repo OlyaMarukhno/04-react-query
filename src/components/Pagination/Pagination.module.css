@@ -1,0 +1,41 @@
+.pagination {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 5px;
+    margin: 20px 0;
+}
+
+.button {
+    padding: 8px 12px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+    border-radius: 4px;
+    min-width: 35px;
+    font-size: 14px;
+}
+
+.button:hover:not(:disabled) {
+    background-color: #f0f0f0;
+}
+
+.button:disabled {
+    opacity: 0.6;
+    cursor: default;
+}
+
+.active {
+    background: #0a66c2 !important;
+    color: white;
+    border-color: #0a66c2;
+}
+
+/* Спеціальний стиль для точок, щоб вони були чорними і видними */
+.dots {
+    background: transparent !important;
+    border: none !important;
+    color: black !important;
+    font-weight: bold;
+    cursor: default !important;
+}
