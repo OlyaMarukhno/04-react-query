@@ -24,7 +24,6 @@ const MovieModal: React.FC<MovieModalProps> = ({ movie, onClose }) => {
 
     window.addEventListener('keydown', handleKeyDown);
 
-    // 3. Очищення подій та повернення скролу при закритті
     return () => {
       document.body.style.overflow = '';
       window.removeEventListener('keydown', handleKeyDown);

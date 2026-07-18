@@ -1,45 +1,46 @@
 import React, { useState, useEffect } from 'react';
 import toast, { Toaster } from 'react-hot-toast';
 import { useQuery } from '@tanstack/react-query';
+import ReactPaginate from 'react-paginate';
 import SearchBar from '../SearchBar/SearchBar';
 import MovieGrid from '../MovieGrid/MovieGrid';
 import Loader from '../Loader/Loader';
 import ErrorMessage from '../ErrorMessage/ErrorMessage';
 import MovieModal from '../MovieModal/MovieModal';
-import Pagination from '../Pagination/Pagination'; 
 import { fetchMovies } from '../../services/movieService';
 import type { Movie } from '../../types/movie';
+
+// Імпорт стилів пагінації
+import paginationCss from '../Pagination/Pagination.module.css';
+
+// Гарантований імпорт для Vite
+const ReactPaginateComponent = (ReactPaginate as any).default || ReactPaginate;
 
 const App: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState<string>('');
   const [page, setPage] = useState<number>(1);
   const [selectedMovie, setSelectedMovie] = useState<Movie | null>(null);
 
-  const { data, isLoading, isError, refetch } = useQuery({
+  const { data, isLoading, isError, isSuccess, isFetched } = useQuery({
     queryKey: ['movies', searchQuery, page],
     queryFn: () => fetchMovies(searchQuery, page),
-    enabled: false,
+    enabled: searchQuery !== '',
     placeholderData: (previousData) => previousData,
   });
 
   useEffect(() => {
-    if (searchQuery !== '') {
-      refetch().then((result) => {
-        if (result.data && result.data.results.length === 0) {
-          toast.error('No movies found for your request.');
-        }
-      });
+    if (isFetched && isSuccess && data?.results.length === 0) {
+      toast.error('No movies found for your request.');
     }
-  }, [searchQuery, page, refetch]);
+  }, [isFetched, isSuccess, data]);
 
   const handleSearch = (query: string) => {
-    if (query.trim() === '') return;
     setSearchQuery(query);
     setPage(1);
   };
 
-  const handlePageChange = (newPage: number) => {
-    setPage(newPage);
+  const handlePageClick = (selectedItem: { selected: number }) => {
+    setPage(selectedItem.selected + 1);
     window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
@@ -48,34 +49,36 @@ const App: React.FC = () => {
 
   return (
     <div>
-      <Toaster position="top-center" reverseOrder={false} />
+      <Toaster />
       <SearchBar onSubmit={handleSearch} />
 
-      <main style={{ padding: '0 20px' }}>
+      <main>
         {isError && <ErrorMessage />}
+        {isLoading && <Loader />}
         
-        {isLoading ? (
-          <Loader />
-        ) : (
-          movies.length > 0 && (
-            <>
-              {/* Тепер Pagination стоїть ТУТ, перед MovieGrid */}
-              <Pagination 
-                currentPage={page} 
-                totalPages={totalPages} 
-                onPageChange={handlePageChange} 
-              />
-              <MovieGrid movies={movies} onSelect={setSelectedMovie} />
-            </>
-          )
+        {isSuccess && movies.length > 0 && (
+          <>
+            {/* Пагінація перед галереєю */}
+            <ReactPaginateComponent
+              pageCount={totalPages}
+              pageRangeDisplayed={5}
+              marginPagesDisplayed={1}
+              breakLabel="..."
+              onPageChange={handlePageClick}
+              forcePage={page - 1}
+              containerClassName={paginationCss.pagination}
+              pageClassName={paginationCss.item}
+              activeClassName={paginationCss.active}
+              disabledClassName={paginationCss.disabled}
+            />
+            
+            <MovieGrid movies={movies} onSelect={setSelectedMovie} />
+          </>
         )}
       </main>
 
       {selectedMovie && (
-        <MovieModal 
-          movie={selectedMovie} 
-          onClose={() => setSelectedMovie(null)} 
-        />
+        <MovieModal movie={selectedMovie} onClose={() => setSelectedMovie(null)} />
       )}
     </div>
   );
